@@ -18,8 +18,6 @@ import Data.Text.Encoding (encodeUtf8)
 
 import Util (hashToken, convertToBase64, convertFromBase64, convertFromBase64')
 import Settings
-
-import Servant (throwError)
 import Network.Wai.Middleware.RequestLogger (logStdout)
 
 server :: SettingsBytes -> Server API
@@ -30,9 +28,9 @@ server (SettingsBytes salt hashedToken) = postServer
       name' <- case convertFromBase64' $ encodeUtf8 name of
         Left _ -> throwError err404
         Right n -> return n
-      case hashToken name' salt == hashedToken of
-        False -> throwError err404
-        True -> return NoContent
+      if hashToken name' salt == hashedToken
+        then return NoContent
+        else throwError err404
 
 
 appAPI :: Proxy API

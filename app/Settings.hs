@@ -10,6 +10,7 @@ import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 
 import Control.Monad (liftM)
+import Control.Applicative
 
 import Util
 
@@ -34,6 +35,11 @@ instance ToJSON Settings where
 instance FromJSON Settings
 
 readSettingsFile :: IO (Maybe SettingsBytes)
-readSettingsFile = liftM (fmap bytesFromSettings) (decodeFileStrict "auth.json")
-writeSettingsFileBytes :: ByteString -> ByteString -> IO ()
-writeSettingsFileBytes a b = encodeFile "auth.json" . bytesToSettings $ SettingsBytes a b
+readSettingsFile = (fmap bytesFromSettings)
+                <$> (    decodeFileStrict "/var/lib/auth-server/auth.json"
+                     <|> decodeFileStrict "auth.json")
+
+readSettingsFile' f = (fmap bytesFromSettings) <$> decodeFileStrict f
+
+writeSettingsFileBytes :: FilePath -> ByteString -> ByteString -> IO ()
+writeSettingsFileBytes f a b = encodeFile f . bytesToSettings $ SettingsBytes a b
